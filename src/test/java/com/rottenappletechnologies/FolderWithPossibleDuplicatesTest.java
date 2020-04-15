@@ -27,9 +27,9 @@ class FolderWithPossibleDuplicatesTest {
 	@DisplayName( "The method listFilesFromFolder should yield a list containing a reference to each and every file " +
 			"contained in the provided folder path" )
 	void testThisShouldListFilesFromTheTestFolder() {
-		FolderWithPossibleDuplicates folder = new FolderWithPossibleDuplicates();
+		FolderWithPossibleDuplicates folder = new FolderWithPossibleDuplicates( "src/test/resources/sampleFiles" );
 		String[] fileFilters = new String[] { "zip", "jar" };
-		final List<Path> actualList = folder.listFilesFromFolder( "src/test/resources/sampleFiles", fileFilters );
+		final List<Path> actualList = folder.getListOfFiles( fileFilters );
 		List<Path> expectedList = new ArrayList<>();
 		expectedList.add( Paths.get( "src/test/resources/sampleFiles/apache-ant-1.10.2-bin.zip" ) );
 		expectedList.add( Paths.get( "src/test/resources/sampleFiles/derby-10.14.1.0.jar" ) );
@@ -53,8 +53,8 @@ class FolderWithPossibleDuplicatesTest {
 	@DisplayName( "Listing the files on a folder without providing a specific file extension filters, should yield all " +
 			"the files without distinction" )
 	void testListingTheFilesOnAFolderWithoutProvidingASpecificExtensionFiltersShouldYieldAllTheFilesWithoutDistinction() {
-		FolderWithPossibleDuplicates folder = new FolderWithPossibleDuplicates();
-		final List<Path> actualList = folder.listFilesFromFolder( "src/test/resources/sampleFiles" );
+		FolderWithPossibleDuplicates folder = new FolderWithPossibleDuplicates( "src/test/resources/sampleFiles" );
+		final List<Path> actualList = folder.getListOfFiles();
 		List<Path> expectedList = new ArrayList<>();
 		expectedList.add( Paths.get( "src/test/resources/sampleFiles/apache-ant-1.10.2-bin.zip" ) );
 		expectedList.add( Paths.get( "src/test/resources/sampleFiles/derby-10.14.1.0.jar" ) );
@@ -77,9 +77,9 @@ class FolderWithPossibleDuplicatesTest {
 	@Test
 	@DisplayName( "The method hashAndGroupDuplicates() should group Paths and associate them with their common hash" )
 	void testThisShouldGroupDuplicatedFilesTakenFromADirectory() {
-		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates();
-		final List<Path> paths = folderWithDuplicates.listFilesFromFolder( "src/test/resources/sampleFiles/folderWithDuplicates", new String[] { "zip", "jar" } );
-		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupPathsByHash( paths, "SHA-256" );
+		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates( "src/test/resources/sampleFiles/folderWithDuplicates" );
+		final List<Path> paths = folderWithDuplicates.getListOfFiles( new String[] { "zip", "jar" } );
+		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupFilesByHash( paths, "SHA-256" );
 		
 		final List<Path> apacheAntFileHash = groupedHashes.get( "a8e6320476b721215988819bc554d61f5ec8a80338485b78afbe51df0dfcbc4d" );
 		logger.debug( "Paths related to the hash a8e6320476b721215988819bc554d61f5ec8a80338485b78afbe51df0dfcbc4d" );
@@ -110,9 +110,9 @@ class FolderWithPossibleDuplicatesTest {
 	@DisplayName( "The method hashAndGroupDuplicates() should yield an empty grouped-hashes list if an " +
 			"unavailable hashing algorithm is provided" )
 	void testHashGroupDuplicatesShouldHandleIssuesWhenProvidingAnUnavailableHashingAlgorithm() {
-		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates();
-		final List<Path> paths = folderWithDuplicates.listFilesFromFolder( "src/test/resources/sampleFiles/folderWithDuplicates", new String[] { "zip", "jar" } );
-		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupPathsByHash( paths, "SHA-258" );
+		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates( "src/test/resources/sampleFiles/folderWithDuplicates" );
+		final List<Path> paths = folderWithDuplicates.getListOfFiles( new String[] { "zip", "jar" } );
+		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupFilesByHash( paths, "SHA-258" );
 		assertTrue( groupedHashes.isEmpty() );
 	}
 	
@@ -120,11 +120,11 @@ class FolderWithPossibleDuplicatesTest {
 	@DisplayName( "If an empty List<Path> is provided to the method hashAndGroupDuplicates(), it should yield an empty " +
 			"grouped-hashes list" )
 	void testHashGroupDuplicatesShouldHandleNulls() {
-		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates();
-		final List<Path> paths = folderWithDuplicates.listFilesFromFolder( "non/existent/path", new String[] { "zip", "jar" } );
+		FolderWithPossibleDuplicates folderWithDuplicates = new FolderWithPossibleDuplicates( "non/existent/path" );
+		final List<Path> paths = folderWithDuplicates.getListOfFiles( new String[] { "zip", "jar" } );
 		assertNull( paths );
 		
-		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupPathsByHash( paths, "SHA-256" );
+		final Map<String, List<Path>> groupedHashes = folderWithDuplicates.groupFilesByHash( paths, "SHA-256" );
 		assertTrue( groupedHashes.isEmpty() );
 	}
 }
