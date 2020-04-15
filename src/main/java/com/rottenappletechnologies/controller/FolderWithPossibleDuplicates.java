@@ -20,26 +20,39 @@ import java.util.stream.Stream;
 public class FolderWithPossibleDuplicates {
 	
 	private Logger logger = LoggerFactory.getLogger( MethodHandles.lookup().lookupClass().getSimpleName() );
+	private final String rootFolder;
 	
-	public List<Path> listFilesFromFolder( String folderPath ) {
-		return listFilesFromFolder( folderPath, null );
+	public String getRootFolder() {
+		return rootFolder;
 	}
 	
+	public FolderWithPossibleDuplicates( String rootFolder ) {
+		this.rootFolder = rootFolder;
+	}
 	
-	public List<Path> listFilesFromFolder( String folderPath, String[] allowedFileExtensions ) {
+	public List<Path> getListOfFiles() {
+		return getListOfFiles( null );
+	}
+	
+	public List<Path> getListOfFiles( String[] allowedFileExtensions ) {
 		try {
-			Path folder = Paths.get( folderPath );
-			if( Files.exists( folder, LinkOption.NOFOLLOW_LINKS ) && Files.isReadable( folder ) ) {
+			Path folder = Paths.get( getRootFolder() );
+			if( Files.notExists( folder, LinkOption.NOFOLLOW_LINKS ) || !Files.isReadable( folder ) ) {
+				logger.debug( "The specified folder \"" + getRootFolder() + "\" either, doesn't exist or is unreadable." );
+			} else {
 				
 				// Filtering out extensions
-				Stream<Path> fileList = Files.walk( folder ).filter( Files :: isRegularFile );
-				if( allowedFileExtensions != null ) {
-					fileList = fileList.filter( path -> Stream.of( allowedFileExtensions ).anyMatch( path.toString() :: endsWith ) );
-				}
+				Stream<Path> fileList = Files.walk( folder )
+						.filter( Files :: isRegularFile )
+						.filter( path -> ( allowedFileExtensions != null )?
+								Stream.of( allowedFileExtensions ).anyMatch( path.toString().toLowerCase() :: endsWith )
+								: Stream.of( "ini", ".DS_Store" ).noneMatch( path.toString().toLowerCase() :: endsWith )
+						);
+				
 				Path[] list = fileList.toArray( Path[] :: new );
 				
-				logger.debug( "* Files identified on \"" + folder.toString() + "\":" );
-				Arrays.stream( list ).forEach( path -> logger.debug( "\t\t# " + path ) );
+				logger.trace( "* Files identified on \"" + folder.toString() + "\":" );
+				Arrays.stream( list ).forEach( path -> logger.trace( "\t\t# " + path ) );
 				
 				return Arrays.asList( list );
 			}
@@ -50,7 +63,7 @@ public class FolderWithPossibleDuplicates {
 		return null;
 	}
 	
-	public Map<String, List<Path>> groupPathsByHash( List<Path> listOfFiles, String hashingAlgorithm ) {
+	public Map<String, List<Path>> groupFilesByHash( List<Path> listOfFiles, String hashingAlgorithm ) {
 		Map<String, List<Path>> groupedFilesByHash = new HashMap<>();
 		if( listOfFiles != null ) {
 			try {
