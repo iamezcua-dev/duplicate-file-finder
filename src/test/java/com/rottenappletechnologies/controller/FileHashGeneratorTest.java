@@ -1,45 +1,27 @@
-package com.rottenappletechnologies;
+package com.rottenappletechnologies.controller;
 
-import com.rottenappletechnologies.controller.FileHashGenerator;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.net.URI;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class FileHashGeneratorTest {
+class FileHashGeneratorTest {
 	
-	public static final String filename = "sampleFiles/folderWithDuplicates/apache-ant-1.10.2-bin.zip";
-	public static final String fileMD5 = "2f496d6d912e6d0d212ac8c0663585bb";
+	private static String filename;
 	
-	@Test
-	@DisplayName( "Showing classpath contents only ..." )
-	public void testShowClassPathFiles() {
-		String classpath = System.getProperty( "java.class.path" );
-		for( String jar : classpath.split( System.getProperty( "path.separator" ) ) ) {
-			System.out.println( jar );
-		}
+	@BeforeAll
+	public static void setup() {
+		filename = "sampleFiles/folderWithDuplicates/apache-ant-1.10.2-bin.zip";
 	}
 	
 	@Test
-	@DisplayName( "Read filename from classpath should be deterministic" )
-	public void testReadFilenameFromClasspathMustBeDeterministic() {
-		try {
-			URI fileUri = Paths.get( "src/test/resources", filename ).toUri();
-			assertEquals( fileUri,
-					Paths.get( System.getProperty( "user.dir" ), "src/test/resources", filename ).toUri() );
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-	}
-	
-	@Test
-	@DisplayName( "A MD5 hash must have 32 characters of length" )
+	@DisplayName( "An MD5 hash must have 32 characters of length" )
 	public void testComputedHashMustHave32CharactersOfLength() {
 		try {
 			File file = new File( Paths.get( "src/test/resources", filename ).toUri() );
